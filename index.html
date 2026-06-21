@@ -1,98 +1,469 @@
-<script src="js/referencia.js"></script>
-<script src="js/db.js"></script>
-<script>
-  let referenciaPendente = null;
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    await carregarEstatisticas();
-    await carregarLaudosRecentes();
-    
-    // Registro do Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err => 
-        console.log('SW não registrado:', err)
-      );
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avaliação Imobiliária — Capitalização da Renda</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      line-height: 1.5;
+      min-height: 100vh;
     }
-  });
-
-  async function iniciarNovoLaudo() {
-    referenciaPendente = gerarReferencia('LA');
-    document.getElementById('nova-referencia').textContent = referenciaPendente;
-    document.getElementById('select-finalidade').value = '';
-    document.getElementById('modal-novo-laudo').style.display = 'flex';
-  }
-
-  function confirmarNovoLaudo() {
-    const finalidade = document.getElementById('select-finalidade').value;
-    if (!finalidade) {
-      alert('Selecione a finalidade da avaliação.');
-      return;
+    .topo {
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      color: white;
+      padding: 24px 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    sessionStorage.setItem('laudo_referencia', referenciaPendente);
-    sessionStorage.setItem('laudo_finalidade', finalidade);
-    window.location.href = 'laudo.html';
-  }
+    .topo-conteudo {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .topo-icone {
+      background: rgba(255,255,255,0.15);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .topo h1 { font-size: 20px; font-weight: 600; }
+    .topo-subtitulo { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .boas-vindas { margin-bottom: 24px; }
+    .boas-vindas h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .boas-vindas-texto { color: #64748b; font-size: 14px; }
+    .menu-principal {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .cartao {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      width: 100%;
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+    .cartao:hover {
+      border-color: #1e40af;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+    .cartao-destaque {
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      color: white;
+      border: none;
+    }
+    .cartao-destaque:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+    .cartao-destaque .cartao-conteudo p { color: rgba(255,255,255,0.85); }
+    .cartao-icone {
+      font-size: 28px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #dbeafe;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .cartao-destaque .cartao-icone {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    .cartao-conteudo { flex: 1; }
+    .cartao-conteudo h3 { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+    .cartao-conteudo p { font-size: 13px; color: #64748b; }
+    .cartao-seta {
+      font-size: 24px;
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+    .cartao-destaque .cartao-seta { color: white; }
+    .cartao-badge {
+      background: #1e40af;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .cartao-destaque .cartao-badge { background: rgba(255,255,255,0.25); }
+    .estatisticas { margin-bottom: 32px; }
+    .estatisticas h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-valor {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 4px;
+    }
+    .stat-rotulo {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .recentes h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .lista-recentes {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .laudo-item {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .laudo-item:last-child { border-bottom: none; }
+    .laudo-item:hover { background: #f8fafc; }
+    .laudo-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .laudo-info strong { font-family: 'Courier New', monospace; font-size: 14px; }
+    .laudo-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #64748b;
+    }
+    .laudo-status.finalizado { background: #d1fae5; color: #065f46; }
+    .laudo-status.rascunho { background: #fef3c7; color: #92400e; }
+    .laudo-detalhes { font-size: 12px; color: #64748b; }
+    .vazio {
+      padding: 48px 16px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-conteudo {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    .modal-cabecalho {
+      padding: 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-cabecalho h2 { font-size: 18px; font-weight: 600; }
+    .modal-fechar {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+    .modal-corpo { padding: 24px; }
+    .modal-corpo p { margin-bottom: 16px; font-size: 14px; }
+    .modal-rodape {
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .campo-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .campo-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      background: white;
+    }
+    .campo-select:focus {
+      outline: none;
+      border-color: #1e40af;
+      box-shadow: 0 0 0 3px #dbeafe;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-primario { background: #1e40af; color: white; }
+    .btn-primario:hover { background: #1e3a8a; }
+    .btn-secundario {
+      background: transparent;
+      color: #0f172a;
+      border-color: #e2e8f0;
+    }
+    .btn-secundario:hover { background: #f8fafc; }
+    .aviso-box {
+      background: #fef3c7;
+      border-left: 4px solid #d97706;
+      padding: 16px;
+      border-radius: 6px;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+    .aviso-box strong { display: block; margin-bottom: 8px; color: #92400e; }
+    .aviso-box ul { margin-left: 16px; margin-bottom: 8px; }
+    .texto-menor { font-size: 12px; color: #64748b; margin-top: 8px; }
+    .rodape {
+      max-width: 900px;
+      margin: 48px auto 24px;
+      padding: 0 16px;
+      text-align: center;
+    }
+    .rodape p { font-size: 11px; color: #94a3b8; line-height: 1.6; }
+    .rodape strong { color: #64748b; }
+    @media (max-width: 600px) {
+      .topo h1 { font-size: 17px; }
+      .boas-vindas h2 { font-size: 20px; }
+      .cartao { padding: 16px; }
+      .cartao-icone { width: 40px; height: 40px; font-size: 22px; }
+      .stat-valor { font-size: 22px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
 
-  function abrirBancoAmostras() { window.location.href = 'banco.html'; }
-  function abrirLaudosSalvos() { window.location.href = 'laudos.html'; }
-  function abrirConfiguracoes() { window.location.href = 'config.html'; }
-  function abrirBackup() { alert('Função de backup será criada na Fase 5.'); }
-  function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+  <header class="topo">
+    <div class="topo-conteudo">
+      <div class="topo-icone">R$</div>
+      <div>
+        <h1>Avaliação Imobiliária</h1>
+        <p class="topo-subtitulo">Capitalização da Renda</p>
+      </div>
+    </div>
+  </header>
 
-  async function carregarEstatisticas() {
-    try {
-      const amostras = await buscarAmostras();
-      document.getElementById('stat-total').textContent = amostras.length;
-      document.getElementById('badge-amostras').textContent = amostras.length;
-      const cidades = new Set(amostras.map(a => a.cidade).filter(Boolean));
-      document.getElementById('stat-cidades').textContent = cidades.size;
-      if (amostras.length > 0) {
-        const medias = amostras.map(a => a.cap_rate).filter(v => v > 0);
-        if (medias.length > 0) {
-          const media = medias.reduce((s, v) => s + v, 0) / medias.length;
-          document.getElementById('stat-caprate').textContent = media.toFixed(1) + '%';
-        }
-        const datas = amostras.map(a => new Date(a.data)).sort((a, b) => b - a);
-        const diffDias = Math.floor((new Date() - datas[0]) / (1000 * 60 * 60 * 24));
-        document.getElementById('stat-recente').textContent = 
-          diffDias === 0 ? 'Hoje' : diffDias === 1 ? 'Ontem' : `${diffDias} dias`;
-      }
-    } catch (err) { console.error(err); }
-  }
+  <main class="container">
+    <section class="boas-vindas">
+      <h2>Olá, Corretor </h2>
+      <p class="boas-vindas-texto">
+        Selecione uma opção para começar. Cada laudo finalizado vira uma amostra 
+        reutilizável no seu banco de dados.
+      </p>
+    </section>
 
-  async function carregarLaudosRecentes() {
-    try {
-      const laudos = await buscarLaudosRecentes(5);
-      const container = document.getElementById('lista-recentes');
-      document.getElementById('badge-laudos').textContent = laudos.length;
-      if (laudos.length === 0) {
-        container.innerHTML = '<p class="vazio">Nenhum laudo ainda. Clique em "Iniciar Novo Laudo" para começar.</p>';
+    <section class="menu-principal">
+      <button class="cartao cartao-destaque" onclick="iniciarNovoLaudo()">
+        <div class="cartao-icone">＋</div>
+        <div class="cartao-conteudo">
+          <h3>Iniciar Novo Laudo</h3>
+          <p>Cria uma nova avaliação com referência automática</p>
+        </div>
+        <div class="cartao-seta">›</div>
+      </button>
+
+      <button class="cartao" onclick="alert('Banco de amostras será implementado na Fase 3')">
+        <div class="cartao-icone">📊</div>
+        <div class="cartao-conteudo">
+          <h3>Meu Banco de Amostras</h3>
+          <p>Consulte cap rates e estatísticas do seu histórico</p>
+        </div>
+        <div class="cartao-badge" id="badge-amostras">0</div>
+      </button>
+
+      <button class="cartao" onclick="alert('Lista de laudos será implementada na Fase 2')">
+        <div class="cartao-icone"></div>
+        <div class="cartao-conteudo">
+          <h3>Laudos Salvos</h3>
+          <p>Retome rascunhos ou revise pareceres finalizados</p>
+        </div>
+        <div class="cartao-badge" id="badge-laudos">0</div>
+      </button>
+
+      <button class="cartao" onclick="alert('Configurações será implementado na Fase 2')">
+        <div class="cartao-icone">⚙️</div>
+        <div class="cartao-conteudo">
+          <h3>Configurações</h3>
+          <p>Perfil, cap rates padrão SC, preferências</p>
+        </div>
+        <div class="cartao-seta">›</div>
+      </button>
+    </section>
+
+    <section class="estatisticas">
+      <h3>Resumo do banco</h3>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-valor" id="stat-total">0</div>
+          <div class="stat-rotulo">Amostras totais</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-valor" id="stat-cidades">0</div>
+          <div class="stat-rotulo">Cidades cobertas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-valor" id="stat-caprate">—</div>
+          <div class="stat-rotulo">Cap rate médio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-valor" id="stat-recente">—</div>
+          <div class="stat-rotulo">Última atualização</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="recentes">
+      <h3>Laudos recentes</h3>
+      <div id="lista-recentes" class="lista-recentes">
+        <p class="vazio">Nenhum laudo ainda. Clique em "Iniciar Novo Laudo" para começar.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <p>
+      <strong>Aviso:</strong> Ferramenta de apoio — os valores gerados expressam 
+      opinião fundamentada do corretor. Não constituem laudo técnico nos termos 
+      da NBR 14653.
+    </p>
+  </footer>
+
+  <div id="modal-novo-laudo" class="modal" style="display:none;">
+    <div class="modal-conteudo">
+      <div class="modal-cabecalho">
+        <h2>Novo Laudo</h2>
+        <button class="modal-fechar" onclick="fecharModal('modal-novo-laudo')">×</button>
+      </div>
+      <div class="modal-corpo">
+        <p>Será criada uma nova avaliação com a referência <strong id="nova-referencia">LA-2026-0001</strong>.</p>
+        <label class="campo-label">Finalidade da avaliação</label>
+        <select id="select-finalidade" class="campo-select">
+          <option value="">Selecione...</option>
+          <option value="apenas_cap_rate">Apenas apurar Cap Rate</option>
+          <option value="apenas_locacao">Apenas precificação para locação</option>
+          <option value="apenas_venda">Apenas precificação para venda</option>
+          <option value="venda_locacao">Venda + Locação (completo)</option>
+        </select>
+        <div class="aviso-box">
+          <strong>️ Não suportado:</strong>
+          <ul>
+            <li>Garantia de financiamento bancário</li>
+            <li>Partilha judicial</li>
+            <li>Incorporação imobiliária</li>
+          </ul>
+          <p class="texto-menor">Para essas finalidades, consulte um engenheiro avaliador (CNAI).</p>
+        </div>
+      </div>
+      <div class="modal-rodape">
+        <button class="btn btn-secundario" onclick="fecharModal('modal-novo-laudo')">Cancelar</button>
+        <button class="btn btn-primario" onclick="confirmarNovoLaudo()">Iniciar →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let referenciaPendente = null;
+
+    function gerarReferencia(tipo = 'LA') {
+      const ano = new Date().getFullYear();
+      const chave = `sequencia_${tipo}_${ano}`;
+      let seq = parseInt(localStorage.getItem(chave) || '0') + 1;
+      localStorage.setItem(chave, seq.toString());
+      return `${tipo}-${ano}-${seq.toString().padStart(4, '0')}`;
+    }
+
+    function iniciarNovoLaudo() {
+      referenciaPendente = gerarReferencia('LA');
+      document.getElementById('nova-referencia').textContent = referenciaPendente;
+      document.getElementById('select-finalidade').value = '';
+      document.getElementById('modal-novo-laudo').style.display = 'flex';
+    }
+
+    function confirmarNovoLaudo() {
+      const finalidade = document.getElementById('select-finalidade').value;
+      if (!finalidade) {
+        alert('Selecione a finalidade da avaliação.');
         return;
       }
-      container.innerHTML = laudos.map(l => `
-        <div class="laudo-item" onclick="retomarLaudo('${l.referencia}')">
-          <div class="laudo-info">
-            <strong>${l.referencia}</strong>
-            <span class="laudo-status ${l.status}">${formatarStatus(l.status)}</span>
-          </div>
-          <div class="laudo-detalhes">
-            ${l.imovel?.tipo || '—'} · ${l.imovel?.cidade || '—'} · ${formatarData(l.data_criacao)}
-          </div>
-        </div>
-      `).join('');
-    } catch (err) { console.error(err); }
-  }
+      sessionStorage.setItem('laudo_referencia', referenciaPendente);
+      sessionStorage.setItem('laudo_finalidade', finalidade);
+      alert(`Laudo ${referenciaPendente} iniciado!\nFinalidade: ${finalidade}\n\n(A tela do laudo será criada na próxima fase)`);
+      fecharModal('modal-novo-laudo');
+    }
 
-  function retomarLaudo(ref) {
-    sessionStorage.setItem('laudo_retomar', ref);
-    window.location.href = 'laudo.html';
-  }
+    function fecharModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
 
-  function formatarStatus(s) {
-    return { rascunho: '📝 Rascunho', finalizado: '✅ Finalizado', arquivado: '📦 Arquivado' }[s] || s;
-  }
-  function formatarData(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('pt-BR');
-  }
-</script>
+    // Inicialização segura
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('✅ App inicializado');
+      // Atualiza badges com valores do localStorage
+      const amostrasCount = localStorage.getItem('amostras_count') || '0';
+      const laudosCount = localStorage.getItem('laudos_count') || '0';
+      document.getElementById('badge-amostras').textContent = amostrasCount;
+      document.getElementById('badge-laudos').textContent = laudosCount;
+      document.getElementById('stat-total').textContent = amostrasCount;
+    });
+  </script>
+
+</body>
+</html>
