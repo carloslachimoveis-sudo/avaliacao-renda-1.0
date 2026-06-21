@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Novo Parecer</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e40af' width='100' height='100' rx='20'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>R$</text></svg>">
+</head>
+<body>
+
+  <!-- CABEÇALHO FIXO -->
+  <header class="topo-fixo">
+    <button class="btn-voltar" onclick="confirmarSaida()">‹</button>
+    <div class="topo-info">
+      <div class="topo-referencia" id="topo-referencia">LA-2026-0001</div>
+      <div class="topo-status" id="topo-status">Rascunho</div>
+    </div>
+    <button class="btn-salvar" onclick="salvarRascunhoRapido()">💾</button>
+  </header>
+
+  <!-- BARRA DE PROGRESSO -->
+  <div class="barra-progresso">
+    <div class="progresso-preenchimento" id="progresso-preenchimento" style="width: 20%"></div>
+  </div>
+  <div class="etapas-indicadores" id="etapas-indicadores"></div>
+
+  <!-- CONTAINER DAS ETAPAS -->
+  <main class="container-laudo">
+
+    <!-- ETAPA 1: DADOS -->
+    <section class="etapa" data-etapa="1" id="etapa-1">
+      <h2 class="etapa-titulo">1. Identificação</h2>
+      <p class="etapa-descricao">Corretor, solicitante, proprietário e imóvel</p>
+
+      <fieldset class="grupo">
+        <legend>Corretor responsável</legend>
+        <label class="campo">
+          <span>Nome</span>
+          <input type="text" id="corretor_nome" class="campo-input" autocomplete="name">
+        </label>
+        <div class="campo-linha">
+          <label class="campo campo-medio">
+            <span>CRECI</span>
+            <input type="text" id="corretor_creci" class="campo-input" placeholder="00000-F">
+          </label>
+          <label class="campo campo-medio">
+            <span>Data</span>
+            <input type="date" id="corretor_data" class="campo-input">
+          </label>
+        </div>
+        <label class="campo">
+          <span>Telefone / e-mail</span>
+          <input type="text" id="corretor_contato" class="campo-input">
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Solicitante</legend>
+        <label class="campo">
+          <span>Nome</span>
+          <input type="text" id="solicitante_nome" class="campo-input">
+        </label>
+        <label class="campo">
+          <span>CPF/CNPJ</span>
+          <input type="text" id="solicitante_doc" class="campo-input">
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Proprietário</legend>
+        <label class="campo">
+          <span>Nome</span>
+          <input type="text" id="proprietario_nome" class="campo-input">
+        </label>
+        <label class="campo">
+          <span>CPF/CNPJ</span>
+          <input type="text" id="proprietario_doc" class="campo-input">
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Imóvel</legend>
+        <label class="campo">
+          <span>Endereço completo</span>
+          <input type="text" id="imovel_endereco" class="campo-input" placeholder="Rua, número, bairro">
+        </label>
+        <div class="campo-linha">
+          <label class="campo campo-medio">
+            <span>Cidade</span>
+            <input type="text" id="imovel_cidade" class="campo-input">
+          </label>
+          <label class="campo campo-medio">
+            <span>Bairro</span>
+            <input type="text" id="imovel_bairro" class="campo-input">
+          </label>
+        </div>
+        <label class="campo">
+          <span>Tipo do imóvel</span>
+          <select id="imovel_tipo" class="campo-select">
+            <option value="">Selecione...</option>
+            <option value="apartamento">Apartamento</option>
+            <option value="casa">Casa</option>
+            <option value="casa_condominio">Casa em condomínio</option>
+            <option value="sala_comercial">Sala / Loja comercial</option>
+            <option value="galpao">Galpão</option>
+            <option value="terreno">Terreno</option>
+            <option value="rural">Imóvel rural</option>
+            <option value="outro">Outro</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Matrícula / Escritura</span>
+          <input type="text" id="imovel_matricula" class="campo-input">
+        </label>
+        <div class="campo-linha campo-linha-3">
+          <label class="campo">
+            <span>Área construída (m²)</span>
+            <input type="number" id="imovel_area_construida" class="campo-input" inputmode="decimal" step="0.01">
+          </label>
+          <label class="campo">
+            <span>Área terreno (m²)</span>
+            <input type="number" id="imovel_area_terreno" class="campo-input" inputmode="decimal" step="0.01">
+          </label>
+          <label class="campo">
+            <span>Área útil (m²)</span>
+            <input type="number" id="imovel_area_util" class="campo-input" inputmode="decimal" step="0.01">
+          </label>
+        </div>
+        <div class="campo-linha campo-linha-3">
+          <label class="campo">
+            <span>Dormitórios</span>
+            <input type="number" id="imovel_dormitorios" class="campo-input" inputmode="numeric" min="0">
+          </label>
+          <label class="campo">
+            <span>Vagas</span>
+            <input type="number" id="imovel_vagas" class="campo-input" inputmode="numeric" min="0">
+          </label>
+          <label class="campo">
+            <span>Ano construção</span>
+            <input type="number" id="imovel_ano" class="campo-input" inputmode="numeric" min="1800" max="2099">
+          </label>
+        </div>
+        <label class="campo">
+          <span>Padrão construtivo</span>
+          <select id="imovel_padrao" class="campo-select">
+            <option value="">Não informado</option>
+            <option value="baixo">Baixo / popular</option>
+            <option value="medio">Médio</option>
+            <option value="medio_alto">Médio-alto</option>
+            <option value="alto">Alto / luxo</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Estado de conservação</span>
+          <select id="imovel_conservacao" class="campo-select">
+            <option value="">Não informado</option>
+            <option value="novo">Novo</option>
+            <option value="bom">Bem conservado</option>
+            <option value="regular">Regular</option>
+            <option value="reforma">Necessita reforma</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Observações</span>
+          <textarea id="imovel_observacoes" class="campo-textarea" rows="3" placeholder="Edificações secundárias, área inabitável, benfeitorias, pontos de atenção..."></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo grupo-destaque">
+        <legend>Finalidade da avaliação</legend>
+        <p class="campo-ajuda">A finalidade define quais etapas serão exibidas.</p>
+        <div class="radio-grupo">
+          <label class="radio-card">
+            <input type="radio" name="finalidade" value="apenas_cap_rate">
+            <div class="radio-conteudo">
+              <strong>Apenas Cap Rate</strong>
+              <span>Levantamento rápido de taxa</span>
+            </div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="finalidade" value="apenas_locacao">
+            <div class="radio-conteudo">
+              <strong>Apenas Locação</strong>
+              <span>Precificação do aluguel</span>
+            </div>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="finalidade" value="apenas_venda">
+            <div class="radio-conteudo">
+              <strong>Apenas Venda</strong>
+              <span>Precificação de venda</span>
+            </div>
+          </label>
+          <label class="radio-card radio-card-destaque">
+            <input type="radio" name="finalidade" value="venda_locacao">
+            <div class="radio-conteudo">
+              <strong>Venda + Locação</strong>
+              <span>Avaliação completa</span>
+            </div>
+          </label>
+        </div>
+        <div class="aviso-box aviso-compacto">
+          <strong>⚠️ Não suportado:</strong> garantia de financiamento, partilha judicial, incorporação. Para essas finalidades, consulte um engenheiro avaliador (CNAI).
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ETAPA 2: CAP RATE -->
+    <section class="etapa" data-etapa="2" id="etapa-2" style="display:none">
+      <h2 class="etapa-titulo">2. Apurar Cap Rate</h2>
+      <p class="etapa-descricao">Por amostras de mercado ou taxa informada</p>
+
+      <div class="abas">
+        <button class="aba ativa" data-aba="amostras" onclick="trocarAba('amostras')">Por amostras</button>
+        <button class="aba" data-aba="manual" onclick="trocarAba('manual')">Informar manualmente</button>
+      </div>
+
+      <!-- ABA AMOSTRAS -->
+      <div class="aba-conteudo" id="aba-amostras">
+        <button class="btn btn-secundario btn-bloco" onclick="adicionarAmostra()">＋ Adicionar amostra</button>
+        
+        <div id="lista-amostras" class="lista-amostras"></div>
+
+        <!-- Estatística das amostras -->
+        <div id="estatistica-amostras" class="estatistica-box" style="display:none">
+          <h4>📊 Estatística das amostras</h4>
+          <div class="stats-mini">
+            <div><span>Média:</span> <strong id="stat-media">—</strong></div>
+            <div><span>Mediana:</span> <strong id="stat-mediana">—</strong></div>
+            <div><span>Desvio padrão:</span> <strong id="stat-dp">—</strong></div>
+            <div><span>CV:</span> <strong id="stat-cv">—</strong></div>
+          </div>
+          <div id="alerta-cv" class="alerta alerta-aviso" style="display:none">
+            ⚠️ CV acima de 30% indica alta dispersão. Revise as amostras.
+          </div>
+          <div id="alerta-amostras" class="alerta alerta-aviso" style="display:none">
+            ⚠️ Menos de 3 amostras. Resultado pouco confiável.
+          </div>
+        </div>
+
+        <div class="resultado-box">
+          <div class="resultado-linha">
+            <span>Cap rate médio mensal</span>
+            <strong id="res-cap-mensal">—</strong>
+          </div>
+          <div class="resultado-linha">
+            <span>Cap rate médio anual</span>
+            <strong id="res-cap-anual">—</strong>
+          </div>
+          <div class="resultado-linha">
+            <span>Amostras consideradas</span>
+            <strong id="res-amostras-n">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA MANUAL -->
+      <div class="aba-conteudo" style="display:none" id="aba-manual">
+        <label class="campo">
+          <span>Cap rate anual (%)</span>
+          <input type="number" id="cap_manual_anual" class="campo-input" inputmode="decimal" step="0.01" placeholder="Ex: 7.0">
+          <small class="campo-ajuda">Taxa de retorno anual sobre o valor do imóvel.</small>
+        </label>
+        <label class="campo">
+          <span>Fonte da taxa</span>
+          <input type="text" id="cap_manual_fonte" class="campo-input" placeholder="Ex: Pesquisa própria, FipeZAP, sindicato...">
+        </label>
+        <div class="resultado-box">
+          <div class="resultado-linha">
+            <span>Cap rate mensal equivalente</span>
+            <strong id="res-cap-manual-mensal">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUGESTÃO DO BANCO -->
+      <div id="sugestao-banco" class="sugestao-box" style="display:none">
+        <h4>💡 Sugestão do seu banco</h4>
+        <p id="sugestao-texto"></p>
+      </div>
+    </section>
+
+    <!-- ETAPA 3: LOCAÇÃO -->
+    <section class="etapa" data-etapa="3" id="etapa-3" style="display:none">
+      <h2 class="etapa-titulo">3. Avaliação para Locação</h2>
+      <p class="etapa-descricao">Mobília, vacância e administração</p>
+
+      <fieldset class="grupo">
+        <legend>Valor de referência</legend>
+        <label class="campo">
+          <span>Aluguel base de mercado (R$/mês)</span>
+          <input type="number" id="loc_aluguel_base" class="campo-input" inputmode="decimal" step="0.01" placeholder="Ex: 2000">
+          <small class="campo-ajuda">Valor praticado para imóveis semelhantes na região.</small>
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Condição de mobília</legend>
+        <div class="radio-grupo radio-grupo-compacto">
+          <label class="radio-pill">
+            <input type="radio" name="loc_mobilia" value="vazio" checked>
+            <span>Vazio (0%)</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="loc_mobilia" value="semimobiliado">
+            <span>Semimob. (+7%)</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="loc_mobilia" value="mobiliado">
+            <span>Mobiliado (+15%)</span>
+          </label>
+        </div>
+        <label class="campo">
+          <span>Ajuste personalizado (%)</span>
+          <input type="number" id="loc_ajuste_mobilia" class="campo-input" inputmode="decimal" step="0.01" value="0">
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Descontos sobre o aluguel bruto</legend>
+        <label class="campo">
+          <span>Taxa de vacância (%)</span>
+          <input type="number" id="loc_vacancia" class="campo-input" inputmode="decimal" step="0.01" value="8.33">
+          <small class="campo-ajuda">Padrão ≈ 1 mês/ano (8,33%)</small>
+        </label>
+        <label class="campo">
+          <span>Taxa de administração (%)</span>
+          <input type="number" id="loc_admin" class="campo-input" inputmode="decimal" step="0.01" value="10">
+        </label>
+        <label class="campo">
+          <span>IPTU/Condomínio por conta do proprietário (R$/mês)</span>
+          <input type="number" id="loc_iptu" class="campo-input" inputmode="decimal" step="0.01" value="0">
+        </label>
+      </fieldset>
+
+      <div class="resultado-box resultado-destaque">
+        <h4>Resultado — Aluguel sugerido</h4>
+        <div class="resultado-linha"><span>Aluguel bruto base</span> <strong id="loc_res_bruto_base">R$ 0,00</strong></div>
+        <div class="resultado-linha"><span>Ajuste de mobília</span> <strong id="loc_res_ajuste">R$ 0,00</strong></div>
+        <div class="resultado-linha"><span>Aluguel bruto ajustado</span> <strong id="loc_res_bruto_ajustado">R$ 0,00</strong></div>
+        <div class="resultado-linha resultado-desconto"><span>(–) Vacância</span> <strong id="loc_res_vacancia">R$ 0,00</strong></div>
+        <div class="resultado-linha resultado-desconto"><span>(–) Administração</span> <strong id="loc_res_admin">R$ 0,00</strong></div>
+        <div class="resultado-linha resultado-desconto"><span>(–) IPTU/Cond.</span> <strong id="loc_res_iptu">R$ 0,00</strong></div>
+        <div class="resultado-linha resultado-total"><span>Aluguel líquido estimado</span> <strong id="loc_res_liquido">R$ 0,00</strong></div>
+      </div>
+
+      <fieldset class="grupo">
+        <legend>Campo de arbítrio</legend>
+        <div class="arbítrio">
+          <label class="campo campo-pequeno">
+            <span>Para menos (%)</span>
+            <input type="number" id="loc_arb_menos" class="campo-input" inputmode="decimal" step="0.1" value="10">
+          </label>
+          <label class="campo campo-pequeno">
+            <span>Para mais (%)</span>
+            <input type="number" id="loc_arb_mais" class="campo-input" inputmode="decimal" step="0.1" value="10">
+          </label>
+        </div>
+        <div class="resultado-box">
+          <div class="resultado-linha"><span>Limite inferior</span> <strong id="loc_res_min">R$ 0,00</strong></div>
+          <div class="resultado-linha resultado-total"><span>Aluguel recomendado</span> <strong id="loc_res_recomendado">R$ 0,00</strong></div>
+          <div class="resultado-linha"><span>Limite superior</span> <strong id="loc_res_max">R$ 0,00</strong></div>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ETAPA 4: VENDA -->
+    <section class="etapa" data-etapa="4" id="etapa-4" style="display:none">
+      <h2 class="etapa-titulo">4. Avaliação para Venda</h2>
+      <p class="etapa-descricao">Valor de mercado pela capitalização da renda</p>
+
+      <fieldset class="grupo">
+        <legend>Dados de renda</legend>
+        <label class="campo">
+          <span>Aluguel mensal do imóvel (R$)</span>
+          <input type="number" id="venda_aluguel" class="campo-input" inputmode="decimal" step="0.01">
+          <small class="campo-ajuda">Use o aluguel líquido estimado da etapa anterior ou informe outro valor.</small>
+        </label>
+        <label class="campo">
+          <span>Cap rate anual (%)</span>
+          <input type="number" id="venda_cap_rate" class="campo-input" inputmode="decimal" step="0.01">
+          <small class="campo-ajuda">Pré-preenchido com o cap rate apurado.</small>
+        </label>
+      </fieldset>
+
+      <div class="resultado-box">
+        <h4>Valor pela capitalização da renda</h4>
+        <div class="resultado-linha"><span>Aluguel anual (×12)</span> <strong id="venda_res_anual">R$ 0,00</strong></div>
+        <div class="resultado-linha"><span>Cap rate aplicado</span> <strong id="venda_res_cap">—</strong></div>
+        <div class="resultado-linha resultado-total"><span>Valor calculado</span> <strong id="venda_res_calculado">R$ 0,00</strong></div>
+      </div>
+
+      <!-- AJUSTES FÍSICOS (NOVIDADE) -->
+      <fieldset class="grupo grupo-destaque">
+        <legend>Ajustes físicos e de mercado</legend>
+        <p class="campo-ajuda">Desconte custos de recuperação ou benfeitorias não incorporadas.</p>
+        
+        <label class="campo">
+          <span>(–) Edificações secundárias degradadas (R$)</span>
+          <input type="number" id="venda_aj_edificacoes" class="campo-input" inputmode="decimal" step="0.01" value="0">
+          <small class="campo-ajuda">Ex.: edificação sem telhado, anexo inabitável.</small>
+        </label>
+        <label class="campo">
+          <span>(–) Área inabitável (R$)</span>
+          <input type="number" id="venda_aj_inhabitavel" class="campo-input" inputmode="decimal" step="0.01" value="0">
+          <small class="campo-ajuda">Custo de recuperação ou valor não comercial da área inabitável.</small>
+        </label>
+        <label class="campo">
+          <span>(–) Reforma necessária (R$)</span>
+          <input type="number" id="venda_aj_reforma" class="campo-input" inputmode="decimal" step="0.01" value="0">
+          <small class="campo-ajuda">Orçamento estimado de reforma parcial ou total.</small>
+        </label>
+        <label class="campo">
+          <span>(+) Benfeitorias não computadas (R$)</span>
+          <input type="number" id="venda_aj_benfeitorias" class="campo-input" inputmode="decimal" step="0.01" value="0">
+        </label>
+        <label class="campo">
+          <span>(+/–) Fator de oferta (%)</span>
+          <input type="number" id="venda_aj_oferta" class="campo-input" inputmode="decimal" step="0.01" value="0">
+          <small class="campo-ajuda">Negativo se amostras forem majoritariamente anunciadas (sobrepreço).</small>
+        </label>
+
+        <div class="resultado-box">
+          <div class="resultado-linha"><span>Valor calculado</span> <strong id="venda_res_base">R$ 0,00</strong></div>
+          <div class="resultado-linha resultado-desconto"><span>Total de ajustes</span> <strong id="venda_res_ajustes_total">R$ 0,00</strong></div>
+          <div class="resultado-linha resultado-total"><span>Valor ajustado</span> <strong id="venda_res_ajustado">R$ 0,00</strong></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Valor adotado pelo corretor</legend>
+        <label class="campo">
+          <span>Valor final de venda (R$)</span>
+          <input type="number" id="venda_valor_adotado" class="campo-input" inputmode="decimal" step="0.01">
+        </label>
+        <div class="arbítrio">
+          <label class="campo campo-pequeno">
+            <span>Para menos (%)</span>
+            <input type="number" id="venda_arb_menos" class="campo-input" inputmode="decimal" step="0.1" value="10">
+          </label>
+          <label class="campo campo-pequeno">
+            <span>Para mais (%)</span>
+            <input type="number" id="venda_arb_mais" class="campo-input" inputmode="decimal" step="0.1" value="10">
+          </label>
+        </div>
+        <div class="resultado-box">
+          <div class="resultado-linha"><span>Limite inferior</span> <strong id="venda_res_min">R$ 0,00</strong></div>
+          <div class="resultado-linha resultado-total"><span>Valor adotado</span> <strong id="venda_res_adotado">R$ 0,00</strong></div>
+          <div class="resultado-linha"><span>Limite superior</span> <strong id="venda_res_max">R$ 0,00</strong></div>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ETAPA 5: REVISÃO -->
+    <section class="etapa" data-etapa="5" id="etapa-5" style="display:none">
+      <h2 class="etapa-titulo">5. Revisão e Finalização</h2>
+      <p class="etapa-descricao">Confira os dados antes de finalizar</p>
+
+      <div id="revisao-resumo" class="revisao-resumo"></div>
+
+      <fieldset class="grupo">
+        <legend>Conclusão / Fundamentação do corretor</legend>
+        <label class="campo">
+          <textarea id="fundamentacao" class="campo-textarea" rows="6" placeholder="Descreva brevemente os critérios adotados, limitações da pesquisa, fatores relevantes observados em campo..."></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset class="grupo">
+        <legend>Termo de responsabilidade</legend>
+        <div class="termo-box">
+          <p>
+            Este documento expressa a <strong>opinião fundamentada do corretor signatário</strong>, 
+            com base nas informações disponíveis na data-base. <strong>Não constitui laudo técnico 
+            de avaliação nos termos da NBR 14653</strong> e não se destina a fins de garantia 
+            bancária, partilha judicial ou incorporação imobiliária.
+          </p>
+          <label class="checkbox">
+            <input type="checkbox" id="aceite_termo">
+            <span>Li e concordo com os termos acima</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="acoes-finais">
+        <button class="btn btn-secundario btn-bloco" onclick="salvarRascunho()">💾 Salvar como rascunho</button>
+        <button class="btn btn-primario btn-bloco btn-grande" onclick="finalizarParecer()" id="btn-finalizar" disabled>
+          ✅ Finalizar parecer
+        </button>
+        <p class="texto-menor texto-centro">
+          Ao finalizar, este parecer entrará no seu banco de amostras e poderá ser reutilizado em avaliações futuras.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RODAPÉ FIXO COM NAVEGAÇÃO -->
+  <footer class="rodape-fixo">
+    <button class="btn btn-secundario" id="btn-voltar" onclick="etapaAnterior()">← Voltar</button>
+    <button class="btn btn-primario" id="btn-continuar" onclick="proximaEtapa()">Continuar →</button>
+  </footer>
+
+  <!-- MODAL DE CONFIRMAÇÃO DE SAÍDA -->
+  <div id="modal-saida" class="modal" style="display:none">
+    <div class="modal-conteudo">
+      <div class="modal-cabecalho">
+        <h2>Sair do parecer?</h2>
+        <button class="modal-fechar" onclick="fecharModal('modal-saida')">×</button>
+      </div>
+      <div class="modal-corpo">
+        <p>Seus dados serão salvos automaticamente como rascunho. Você pode retomar depois em "Laudos Salvos".</p>
+      </div>
+      <div class="modal-rodape">
+        <button class="btn btn-secundario" onclick="fecharModal('modal-saida')">Cancelar</button>
+        <button class="btn btn-primario" onclick="sairDefinitivo()">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/db.js"></script>
+  <script src="js/referencia.js"></script>
+  <script src="js/estatistica.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/fluxo.js"></script>
+  <script>
+    // Registro do Service Worker (PWA)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => 
+        console.log('SW não registrado:', err)
+      );
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<script src="js/referencia.js"></script>
+<script src="js/db.js"></script>
+<script>
+  let referenciaPendente = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await carregarEstatisticas();
+    await carregarLaudosRecentes();
+    
+    // Registro do Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => 
+        console.log('SW não registrado:', err)
+      );
+    }
+  });
+
+  async function iniciarNovoLaudo() {
+    referenciaPendente = gerarReferencia('LA');
+    document.getElementById('nova-referencia').textContent = referenciaPendente;
+    document.getElementById('select-finalidade').value = '';
+    document.getElementById('modal-novo-laudo').style.display = 'flex';
+  }
+
+  function confirmarNovoLaudo() {
+    const finalidade = document.getElementById('select-finalidade').value;
+    if (!finalidade) {
+      alert('Selecione a finalidade da avaliação.');
+      return;
+    }
+    sessionStorage.setItem('laudo_referencia', referenciaPendente);
+    sessionStorage.setItem('laudo_finalidade', finalidade);
+    window.location.href = 'laudo.html';
+  }
+
+  function abrirBancoAmostras() { window.location.href = 'banco.html'; }
+  function abrirLaudosSalvos() { window.location.href = 'laudos.html'; }
+  function abrirConfiguracoes() { window.location.href = 'config.html'; }
+  function abrirBackup() { alert('Função de backup será criada na Fase 5.'); }
+  function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  async function carregarEstatisticas() {
+    try {
+      const amostras = await buscarAmostras();
+      document.getElementById('stat-total').textContent = amostras.length;
+      document.getElementById('badge-amostras').textContent = amostras.length;
+      const cidades = new Set(amostras.map(a => a.cidade).filter(Boolean));
+      document.getElementById('stat-cidades').textContent = cidades.size;
+      if (amostras.length > 0) {
+        const medias = amostras.map(a => a.cap_rate).filter(v => v > 0);
+        if (medias.length > 0) {
+          const media = medias.reduce((s, v) => s + v, 0) / medias.length;
+          document.getElementById('stat-caprate').textContent = media.toFixed(1) + '%';
+        }
+        const datas = amostras.map(a => new Date(a.data)).sort((a, b) => b - a);
+        const diffDias = Math.floor((new Date() - datas[0]) / (1000 * 60 * 60 * 24));
+        document.getElementById('stat-recente').textContent = 
+          diffDias === 0 ? 'Hoje' : diffDias === 1 ? 'Ontem' : `${diffDias} dias`;
+      }
+    } catch (err) { console.error(err); }
+  }
+
+  async function carregarLaudosRecentes() {
+    try {
+      const laudos = await buscarLaudosRecentes(5);
+      const container = document.getElementById('lista-recentes');
+      document.getElementById('badge-laudos').textContent = laudos.length;
+      if (laudos.length === 0) {
+        container.innerHTML = '<p class="vazio">Nenhum laudo ainda. Clique em "Iniciar Novo Laudo" para começar.</p>';
+        return;
+      }
+      container.innerHTML = laudos.map(l => `
+        <div class="laudo-item" onclick="retomarLaudo('${l.referencia}')">
+          <div class="laudo-info">
+            <strong>${l.referencia}</strong>
+            <span class="laudo-status ${l.status}">${formatarStatus(l.status)}</span>
+          </div>
+          <div class="laudo-detalhes">
+            ${l.imovel?.tipo || '—'} · ${l.imovel?.cidade || '—'} · ${formatarData(l.data_criacao)}
+          </div>
+        </div>
+      `).join('');
+    } catch (err) { console.error(err); }
+  }
+
+  function retomarLaudo(ref) {
+    sessionStorage.setItem('laudo_retomar', ref);
+    window.location.href = 'laudo.html';
+  }
+
+  function formatarStatus(s) {
+    return { rascunho: '📝 Rascunho', finalizado: '✅ Finalizado', arquivado: '📦 Arquivado' }[s] || s;
+  }
+  function formatarData(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('pt-BR');
+  }
+</script>

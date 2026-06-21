@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e40af">
+  <title>Laudos Salvos</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <header class="topo">
+    <div class="topo-conteudo">
+      <button class="btn-voltar-branco" onclick="window.location.href='index.html'">‹</button>
+      <div>
+        <h1>Laudos Salvos</h1>
+        <p class="topo-subtitulo">Rascunhos e pareceres finalizados</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="abas">
+      <button class="aba ativa" data-filtro="todos" onclick="filtrar('todos')">Todos</button>
+      <button class="aba" data-filtro="rascunho" onclick="filtrar('rascunho')">Rascunhos</button>
+      <button class="aba" data-filtro="finalizado" onclick="filtrar('finalizado')">Finalizados</button>
+    </div>
+
+    <div id="lista" class="lista-laudos"></div>
+  </main>
+
+  <script src="js/db.js"></script>
+  <script>
+    let filtroAtual = 'todos';
+    
+    document.addEventListener('DOMContentLoaded', carregar);
+    
+    async function carregar() {
+      const laudos = await listarLaudos();
+      renderizar(laudos);
+    }
+    
+    function filtrar(f) {
+      filtroAtual = f;
+      document.querySelectorAll('.aba').forEach(a => 
+        a.classList.toggle('ativa', a.dataset.filtro === f)
+      );
+      carregar();
+    }
+    
+    async function renderizar(laudos) {
+      const lista = laudos.filter(l => filtroAtual === 'todos' || l.status === filtroAtual);
+      const container = document.getElementById('lista');
+      
+      if (lista.length === 0) {
+        container.innerHTML = '<p class="vazio">Nenhum parecer encontrado.</p>';
+        return;
+      }
+      
+      container.innerHTML = lista.map(l => `
+        <div class="laudo-card">
+          <div class="laudo-card-topo">
+            <strong class="laudo-ref">${l.referencia}</strong>
+            <span class="laudo-status ${l.status}">${formatarStatus(l.status)}</span>
+          </div>
+          <div class="laudo-card-info">
+            <div>${l.imovel?.tipo || '—'} · ${l.imovel?.cidade || '—'}</div>
+            <div class="laudo-card-data">${formatarData(l.data_atualizacao)}</div>
+          </div>
+          <div class="laudo-card-acoes">
+            ${l.status === 'rascunho' 
+              ? `<button class="btn btn-primario btn-pequeno" onclick="retomar('${l.referencia}')">Retomar</button>` 
+              : `<button class="btn btn-secundario btn-pequeno" onclick="retomar('${l.referencia}')">Ver</button>`}
+            <button class="btn btn-secundario btn-pequeno" onclick="excluir('${l.referencia}')">Excluir</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function retomar(ref) {
+      sessionStorage.setItem('laudo_retomar', ref);
+      window.location.href = 'laudo.html';
+    }
+    
+    async function excluir(ref) {
+      if (!confirm(`Excluir ${ref}? Esta ação não pode ser desfeita.`)) return;
+      await excluirLaudo(ref);
+      carregar();
+    }
+    
+    function formatarStatus(s) {
+      return { rascunho: '📝 Rascunho', finalizado: '✅ Finalizado', arquivado: '📦 Arquivado' }[s] || s;
+    }
+    
+    function formatarData(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleString('pt-BR', { 
+        day: '2-digit', month: '2-digit', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit' 
+      });
+    }
+  </script>
+</body>
+</html>
